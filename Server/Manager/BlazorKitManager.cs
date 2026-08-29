@@ -47,7 +47,7 @@ namespace BlazorKit.Application.Manager
                     EntityId = city,
                     Title = city,
                     Description = "",
-                    Body = $"Weather Information Include Temperature, Humidity, Wind, and Precipitation",
+                    Body = $"Weather Information Including Temperature, Humidity, Wind, and Precipitation",
                     Url = $"/?city={WebUtility.UrlEncode(city)}",
                     ContentModifiedBy = "host",
                     ContentModifiedOn = lastIndexedOn
