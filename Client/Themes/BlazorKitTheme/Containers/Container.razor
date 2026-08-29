@@ -1,0 +1,33 @@
+@namespace BlazorKit.Application.BlazorKitTheme
+@inherits ContainerBase
+@inject ISettingService SettingService
+
+@if (_title)
+{
+    <div class="d-flex flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <ModuleActions />
+        <h1 class="h2">@ModuleState.Title</h1>
+    </div>
+}
+else
+{
+    <ModuleActions />
+}
+<ModuleInstance />
+
+
+@code {
+    private bool _title = true;
+
+    protected override void OnParametersSet()
+    {
+        try
+        {
+            _title = bool.Parse(SettingService.GetSetting(ModuleState.Settings, GetType().Namespace + ":Title", "true"));
+        }
+        catch
+        {
+            // error loading container settings
+        }
+    }
+}

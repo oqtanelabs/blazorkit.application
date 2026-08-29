@@ -1,0 +1,215 @@
+@namespace BlazorKit.Application.BlazorKitTheme
+@inherits ThemeBase
+@inject NavigationManager NavigationManager
+@inject ISettingService SettingService
+@inject IStringLocalizer<Default> Localizer
+
+<div class="bg-body text-body" data-bs-theme="@_mode">
+    <header class="navbar sticky-top bg-dark flex-md-nowrap p-0 shadow">
+        <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-6 text-white" href="/">@PageState.Site.Name</a>
+        <ul class="navbar-nav flex-row align-items-center">
+            <li class="nav-item px-2">
+                <a href="search" class="nav-link gap-2 text-white">
+                    <i class="oi oi-magnifying-glass"></i>
+                </a>
+            </li>
+            @if (PageState.User != null)
+            {
+                <li class="nav-item px-2">
+                    <a href="@NavigateUrl("profile")" class="nav-link gap-2">
+                        <img src="@((PageState.User.PhotoFileId.HasValue) ? ImageUrl(PageState.User.PhotoFileId.Value, 100, 100) : "user.jpg")" alt="@PageState.User.DisplayName" style="max-width: 40px;" class="rounded-circle">
+                    </a>
+                </li>
+            }
+            <li class="nav-item px-1">
+                <Login />
+            </li>
+            <li class="nav-item ps-2 pe-3">
+                <ControlPanel />
+            </li>
+            <li class="nav-item px-1 d-md-none">
+                <button class="nav-link px-3 text-white" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
+                    <i class="oi oi-list"></i>
+                </button>
+            </li>
+        </ul>
+    </header>
+    <div class="container-fluid min-vh-100">
+        <div class="row">
+            <div class="sidebar border border-right col-md-3 col-lg-2 p-0 bg-body-tertiary">
+                <div class="offcanvas-md offcanvas-start bg-body-tertiary" tabindex="-1" id="sidebarMenu" aria-labelledby="sidebarMenuLabel">
+                    <div class="offcanvas-header">
+                        <h5 class="offcanvas-title" id="sidebarMenuLabel">@PageState.Site.Name</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebarMenu" aria-label="Close"></button>
+                    </div>
+                    <div class="offcanvas-body d-md-flex flex-column p-0 pt-lg-3 overflow-y-auto">
+                        <ul class="nav flex-column">
+                            @foreach (var p in PageState.Site.Pages.Where(item => item.ParentId == null && item.IsNavigation && !item.IsDeleted).OrderBy(p => p.Order))
+                            {
+                                @if (UserSecurity.IsAuthorized(PageState.User, PermissionNames.View, p.PermissionList))
+                                {
+                                    <li class="nav-item">
+                                        <a href="@p.Path" class="nav-link d-flex align-items-center gap-2">
+                                            @if (!string.IsNullOrEmpty(p.Icon))
+                                            {
+                                                <i class="@p.Icon"></i>
+                                            }
+                                            @p.Name
+                                        </a>
+                                    </li>
+                                }
+                            }
+                        </ul>
+                    </div>
+                    @if (PageState.User != null && _personalize == "true")
+                    {
+                        <hr />
+                        <div class="text-center mb-4">
+                            <form method="post" @formname="ModeForm" @onsubmit="SetMode" data-enhance>
+                                <input type="hidden" name="@Constants.RequestVerificationToken" value="@SiteState.AntiForgeryToken" />
+                                @if (_mode == "dark")
+                                {
+                                    <button type="submit" class="btn btn-light"><i class="oi oi-sun"></i> Light Mode</button>
+                                }
+                                else
+                                {
+                                    <button type="submit" class="btn btn-dark"><i class="oi oi-moon"></i> Dark Mode</button>
+                                }
+                            </form>
+                        </div>
+                    }
+                </div>
+            </div>
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <Pane Name="@PaneNames.Default" />
+                        </div>
+                    </div>
+                </div>
+                <Pane Name="Top Full Width" />
+                <div class="container">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <Pane Name="Top 100%" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <Pane Name="Left 50%" />
+                        </div>
+                        <div class="col-md-6">
+                            <Pane Name="Right 50%" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <Pane Name="Left 33%" />
+                        </div>
+                        <div class="col-md-4">
+                            <Pane Name="Center 33%" />
+                        </div>
+                        <div class="col-md-4">
+                            <Pane Name="Right 33%" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <Pane Name="Left Outer 25%" />
+                        </div>
+                        <div class="col-md-3">
+                            <Pane Name="Left Inner 25%" />
+                        </div>
+                        <div class="col-md-3">
+                            <Pane Name="Right Inner 25%" />
+                        </div>
+                        <div class="col-md-3">
+                            <Pane Name="Right Outer 25%" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <Pane Name="Left 25%" />
+                        </div>
+                        <div class="col-md-6">
+                            <Pane Name="Center 50%" />
+                        </div>
+                        <div class="col-md-3">
+                            <Pane Name="Right 25%" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-8">
+                            <Pane Name="Left Sidebar 66%" />
+                        </div>
+                        <div class="col-md-4">
+                            <Pane Name="Right Sidebar 33%" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <Pane Name="Left Sidebar 33%" />
+                        </div>
+                        <div class="col-md-8">
+                            <Pane Name="Right Sidebar 66%" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <Pane Name="Bottom 100%" />
+                        </div>
+                    </div>
+                </div>
+                <Pane Name="Bottom Full Width" />
+                <CookieConsent />
+            </main>
+        </div>
+    </div>
+</div>
+
+@code {
+    public override string Name => "Default";
+    public override string Panes => PaneNames.Default + ",Top Full Width,Top 100%,Left 50%,Right 50%,Left 33%,Center 33%,Right 33%,Left Outer 25%,Left Inner 25%,Right Inner 25%,Right Outer 25%,Left 25%,Center 50%,Right 25%,Left Sidebar 66%,Right Sidebar 33%,Left Sidebar 33%,Right Sidebar 66%,Bottom 100%,Bottom Full Width,Footer";
+
+    private string _mode = "dark";
+    private string _personalize = "true";
+
+    protected override void OnParametersSet()
+    {
+        try
+        {
+            _mode = SettingService.GetSetting(PageState.Site.Settings, GetType().Namespace + ":Mode", "dark");
+            if (PageState.User != null)
+            {
+                _personalize = SettingService.GetSetting(PageState.User.Settings, GetType().Namespace + ":Personalize", "true");
+                if (_personalize == "true")
+                {
+                    _mode = SettingService.GetSetting(PageState.User.Settings, GetType().Namespace + ":Mode", "dark");
+                }
+            }
+        }
+        catch
+        {
+            // not implemented
+        }
+    }
+
+    private async Task SetMode()
+    {
+        if (_personalize == "true")
+        {
+            if (_mode == "dark")
+            {
+                _mode = "light";
+            }
+            else
+            {
+                _mode = "dark";
+            }
+            var settings = await SettingService.GetUserSettingsAsync(PageState.User.UserId);
+            settings = SettingService.SetSetting(settings, GetType().Namespace + ":Mode", _mode);
+            await SettingService.UpdateUserSettingsAsync(settings, PageState.User.UserId);
+        }
+    }
+}

@@ -1,0 +1,70 @@
+@namespace BlazorKit.Application.BlazorKitTheme
+@inherits ModuleBase
+@implements Oqtane.Interfaces.ISettingsControl
+@inject ISettingService SettingService
+@inject IStringLocalizer<Default> Localizer
+@attribute [OqtaneIgnore]
+
+<div class="container">
+    <div class="row mb-1 align-items-center">
+        <Label Class="col-sm-3" For="mode" HelpText="Specify the default display mode">Mode:</Label>
+        <div class="col-sm-9">
+            <select id="mode" class="form-select" @bind="@_mode">
+                <option value="dark">Dark</option>
+                <option value="light">Light</option>
+            </select>
+        </div>
+    </div>
+    <div class="row mb-1 align-items-center">
+        <Label Class="col-sm-3" For="personalize" HelpText="Specify if a user can change the display mode">Personalize:</Label>
+        <div class="col-sm-9">
+            <select id="personalize" class="form-select" @bind="@_personalize">
+                <option value="true">Yes</option>
+                <option value="false">No</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string _mode = "dark";
+    private string _personalize = "true";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await LoadSettings();
+        }
+        catch (Exception ex)
+        {
+            await logger.LogError(ex, "Error Loading Settings {Error}", ex.Message);
+            AddModuleMessage("Error Loading Settings", MessageType.Error);
+        }
+    }
+
+    private async Task LoadSettings()
+    {
+        // site settings
+        var settings = PageState.Site.Settings;
+        _mode = SettingService.GetSetting(settings, GetType().Namespace + ":Mode", "dark");
+        _personalize = SettingService.GetSetting(settings, GetType().Namespace + ":Personalize", "true");
+    }
+
+    public async Task UpdateSettings()
+    {
+        try
+        {
+            // site settings
+            var settings = await SettingService.GetSiteSettingsAsync(PageState.Site.SiteId);
+            settings = SettingService.SetSetting(settings, GetType().Namespace + ":Mode", _mode);
+            settings = SettingService.SetSetting(settings, GetType().Namespace + ":Personalize", _personalize);
+            await SettingService.UpdateSiteSettingsAsync(settings, PageState.Site.SiteId);
+        }
+        catch (Exception ex)
+        {
+            await logger.LogError(ex, "Error Saving Settings {Error}", ex.Message);
+            AddModuleMessage("Error Saving Settings", MessageType.Error);
+        }
+    }
+}

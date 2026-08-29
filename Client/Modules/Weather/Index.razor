@@ -1,0 +1,439 @@
+@using BlazorKit.Application.Services
+@using BlazorKit.Application.Models
+
+@namespace BlazorKit.Application.Weather
+@inherits ModuleBase
+@inject IWeatherService WeatherService
+
+@if (_weatherData == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <form method="post" id="WeatherForm" @formname="WeatherForm" @onsubmit="RefreshData" data-enhance>
+        <input type="hidden" name="@Constants.RequestVerificationToken" value="@SiteState.AntiForgeryToken" />
+        <div class="row justify-content-center">
+            <div class="col-sm-12 col-md-8 mb-3">
+                <div class="input-group">
+                    <input type="date" name="from" class="form-control" @bind="@_from" />
+                    <span class="input-group-text">To</span>
+                    <input type="date" name="to" class="form-control" @bind="@_to" />
+                    <button type="submit" class="btn btn-primary">Go</button>
+                </div>
+            </div>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col-sm-12 col-md-8 mb-3">
+                <div class="input-group">
+                    <select name="city" class="form-select" value="@_city" onchange="document.getElementById('WeatherForm').requestSubmit()">
+                        @foreach (var city in _cities)
+                        {
+                            <option value="@city">@city</option>
+                        }
+                    </select>
+                    <select name="metric" class="form-select" value="@_metric" onchange="document.getElementById('WeatherForm').requestSubmit()">
+                        <option value="high">High Temp</option>
+                        <option value="low">Low Temp</option>
+                        <option value="humidity">Humidity</option>
+                        <option value="wind">Wind</option>
+                        <option value="pressure">Pressure</option>
+                        <option value="precipitation">Precipitation</option>
+                    </select>
+                    <select name="measure" class="form-select" value="@_measure" onchange="document.getElementById('WeatherForm').requestSubmit()">
+                        <option value="customary">Customary</option>
+                        <option value="metric">Metric</option>
+                    </select>
+                </div>
+            </div>
+        </div>        
+    </form>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+              <div class="card-body">
+                <h4 class="card-title">Highest</h4>
+                <h6 class="card-subtitle mb-2 text-muted">@DisplayMetric()</h6>
+                <p class="card-text text-center">
+                    <div id="high-container">
+                        <canvas id="high-canvas" class="mx-auto d-block" width="200" height="200"></canvas>
+                    </div>
+                    <div id="high-text" class="text-center">@($"{GetValues().Max():F2}")@DisplayUnit()</div>
+                </p>
+              </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+              <div class="card-body">
+                <h4 class="card-title">Lowest</h4>
+                <h6 class="card-subtitle mb-2 text-muted">@DisplayMetric()</h6>
+                <p class="card-text text-center">
+                    <div id="low-container">
+                        <canvas id="low-canvas" class="mx-auto d-block" width="200" height="200"></canvas>
+                    </div>
+                    <div id="low-text" class="text-center">@($"{GetValues().Min():F2}")@DisplayUnit()</div>
+                </p>
+              </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+              <div class="card-body">
+                <h4 class="card-title">Average</h4>
+                <h6 class="card-subtitle mb-2 text-muted">@DisplayMetric()</h6>
+                <p class="card-text text-center">
+                    <div id="avg-container">
+                        <canvas id="avg-canvas" class="mx-auto d-block" width="200" height="200"></canvas>
+                    </div>
+                    <div id="avg-text" class="text-center">@($"{GetValues().Average():F2}")@DisplayUnit()</div>
+                </p>
+              </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mt-4">
+        <div class="card-body">
+            <h4 class="card-title">@_city Daily @DisplayMetric()</h4>
+            <div id="chart-container" class="chart-container">
+                <canvas id="chart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mt-4">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+                <h4 class="card-title">@_city @DisplayMetric() Data</h4>
+                <div>
+                    <a href="@EditUrl("Edit")" class="btn btn-primary mb-4">Manage Data</a>
+                </div>
+            </div>                    
+
+
+            <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                <table class="table table-striped">
+                    <thead class="table-dark sticky-top" style="z-index: 1;">
+                        <tr>
+                            <th>Date</th>
+                            <th>@DisplayMetric()</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in _weatherData)
+                        {
+                            <tr>
+                                <td>@item.Date.ToLongDateString()</td>
+                                <td>@GetValue(item)@DisplayUnit()</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <br /><br />
+    <script id="DashboardScript" data-reload="always">
+        function displayDashboard() {
+            // gauge options
+             const opts = {
+                angle: 0.35, 
+                lineWidth: 0.1, 
+                radiusScale: 1, 
+                limitMax: false, 
+                limitMin: false,  
+                colorStart: '#0d6efd', 
+                colorStop: '#C0C0DB', 
+                strokeColor: '#EEEEEE', 
+                generateGradient: true,
+                highDpiSupport: true, 
+            };
+
+            let container = document.getElementById('high-container');
+            if (container) {
+                if (container.hasChildNodes()) {
+                    while (container.firstChild) {
+                        container.removeChild(container.firstChild);
+                    }
+                }
+                const highCanvas = document.createElement('canvas');
+                highCanvas.id = 'high-canvas';
+                highCanvas.className = 'mx-auto d-block';
+                highCanvas.width = 200;
+                highCanvas.height = 200;
+                container.appendChild(highCanvas);
+                const highGauge = new Donut(highCanvas).setOptions(opts);
+                highGauge.maxValue = @(GetValues().Max()); 
+                highGauge.setMinValue(0);  
+                highGauge.animationSpeed = 32; 
+                highGauge.set(@(GetValues().Max()));
+            }
+
+            // low gauge
+            container = document.getElementById('low-container');
+            if (container) {
+                if (container.hasChildNodes()) {
+                    while (container.firstChild) {
+                        container.removeChild(container.firstChild);
+                    }
+                }
+                const lowCanvas = document.createElement('canvas');
+                lowCanvas.id = 'low-canvas';
+                lowCanvas.className = 'mx-auto d-block';
+                lowCanvas.width = 200;
+                lowCanvas.height = 200;
+                container.appendChild(lowCanvas);
+                const lowGauge = new Donut(lowCanvas).setOptions(opts);
+                lowGauge.maxValue = @(GetValues().Max()); 
+                lowGauge.setMinValue(0);  
+                lowGauge.animationSpeed = 32; 
+                lowGauge.set(@(GetValues().Min())); 
+            }
+            
+            // average gauge
+            container = document.getElementById('avg-container');
+            if (container) {
+                if (container.hasChildNodes()) {
+                    while (container.firstChild) {
+                        container.removeChild(container.firstChild);
+                    }
+                }
+                const avgCanvas = document.createElement('canvas');
+                avgCanvas.id = 'avg-canvas';
+                avgCanvas.className = 'mx-auto d-block';
+                avgCanvas.width = 200;
+                avgCanvas.height = 200;
+                container.appendChild(avgCanvas);
+                const avgGauge = new Donut(avgCanvas).setOptions(opts);
+                avgGauge.maxValue = @(GetValues().Max()); 
+                avgGauge.setMinValue(0);  
+                avgGauge.animationSpeed = 32; 
+                avgGauge.set(@(GetValues().Average())); 
+            }
+                    
+            // chart
+            container = document.getElementById('chart-container');
+            if (container) {
+                if (container.hasChildNodes()) {
+                    while (container.firstChild) {
+                        container.removeChild(container.firstChild);
+                    }
+                }
+                const canvas = document.createElement('canvas');
+                canvas.id = 'chart';
+                container.appendChild(canvas);
+                const ctx = canvas.getContext('2d');
+                const config = {
+                    type: 'line',
+                    data: {
+                        labels: [
+                            @((MarkupString)string.Join(",", _weatherData.Select(item => "'" + item.Date.ToShortDateString() + "'").ToArray()))
+                        ], 
+                        datasets: [
+                            {
+                                label: '@(DisplayMetric())',
+                                data: [
+                                    @(string.Join(",", _weatherData.Select(item => GetValue(item)).ToArray()))
+                                ], 
+                                borderColor: 'rgba(54, 162, 235, 1)', 
+                                backgroundColor: 'rgba(54, 162, 235, 0.1)', 
+                                borderWidth: 3, 
+                                tension: 0.4, 
+                                fill: true, 
+                                pointRadius: 5, 
+                                pointHoverRadius: 7 
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true, 
+                        plugins: {
+                            legend: {
+                                display: false 
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true, 
+                                title: {
+                                    display: true,
+                                    text: '@DisplayMetric() (@DisplayUnit())'
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Date'
+                                }
+                            }
+                        }
+                    }
+                };
+                const chart = new Chart(ctx, config);
+            }
+        }; 
+
+        // ensure scripts are loaded on initial page load before displaying dashboard
+        window.addEventListener('load', (event) => {
+            displayDashboard();
+
+            // handle enhanced navigation events (relies on https://github.com/devessenceinc/BlazorScriptReload)
+            if (window.Blazor) {
+                Blazor.addEventListener('enhancedload', () => {
+                    displayDashboard();
+                });
+            };
+        });
+    </script>
+}
+
+@code {
+    public override string RenderMode => RenderModes.Static;
+
+    public override List<Resource> Resources => new List<Resource>()
+    {
+        new Script($"{ModulePath()}gauge.js"),
+        new Script($"{ModulePath()}chart.js")
+    };
+
+    private DateTime _from = DateTime.MinValue;
+    private DateTime _to = DateTime.MaxValue;
+    private string _city = "";
+    private string _metric = "high";
+    private string _measure = "customary";
+    private List<WeatherData> _weatherData;
+    private List<string> _cities;
+
+    [SupplyParameterFromForm(FormName = "WeatherForm")]
+    public DateTime from { get => _from; set => _from = value; }
+
+    [SupplyParameterFromForm(FormName = "WeatherForm")]
+    public DateTime to { get => _to; set => _to = value; }
+
+    [SupplyParameterFromForm(FormName = "WeatherForm")]
+    public string city { get => _city; set => _city = value; }
+
+    [SupplyParameterFromForm(FormName = "WeatherForm")]
+    public string metric { get => _metric; set => _metric = value; }
+
+    [SupplyParameterFromForm(FormName = "WeatherForm")]
+    public string measure { get => _measure; set => _measure = value; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _cities = await WeatherService.GetWeatherCitiesAsync(PageState.Site.SiteId);
+
+        if (_city == "" && PageState.QueryString.ContainsKey("city"))
+        {
+            _city = PageState.QueryString["city"];
+        }
+        _weatherData = await WeatherService.GetAllWeatherDataAsync(PageState.Site.SiteId, _from, _to, _city);
+
+        if (_from == DateTime.MinValue)
+        {
+            _from = _weatherData.Min(w => w.Date);
+            _to = _weatherData.Max(w => w.Date);
+            _city = _weatherData.First().City;
+            _weatherData = _weatherData.Where(item => item.City == _city).ToList();
+        }
+
+        if (_measure == "metric")
+        {
+            foreach (var item in _weatherData)
+            {
+                item.HighTemperature = Math.Round((item.HighTemperature - 32) * 5 / 9, 2);
+                item.LowTemperature = Math.Round((item.LowTemperature - 32) * 5 / 9, 2);
+                item.WindSpeed = Math.Round(item.WindSpeed * 1.60934m, 2);
+                item.AirPressure = Math.Round(item.AirPressure * 2.54m, 2);
+                item.Precipitation = Math.Round(item.Precipitation * 25.4m, 2);
+            }
+        }
+    }
+
+    private async Task RefreshData()
+    {
+        // placeholder
+    }
+
+    private decimal[] GetValues()
+    {
+        switch (_metric)
+        {
+            case "high":
+                return _weatherData.Select(item => item.HighTemperature).ToArray();
+            case "low":
+                return _weatherData.Select(item => item.LowTemperature).ToArray();
+            case "humidity":
+                return _weatherData.Select(item => item.Humidity).ToArray();
+            case "wind":
+                return _weatherData.Select(item => item.WindSpeed).ToArray();
+            case "pressure":
+                return _weatherData.Select(item => item.AirPressure).ToArray();
+            case "precipitation":
+                return _weatherData.Select(item => item.Precipitation).ToArray();
+        }
+        return new decimal[0];
+    }
+
+    private decimal GetValue(WeatherData weatherData)
+    {
+        switch (_metric)
+        {
+            case "high":
+                return weatherData.HighTemperature;
+            case "low":
+                return weatherData.LowTemperature;
+            case "humidity":
+                return weatherData.Humidity;
+            case "wind":
+                return weatherData.WindSpeed;
+            case "pressure":
+                return weatherData.AirPressure;
+            case "precipitation":
+                return weatherData.Precipitation;
+        }
+        return 0;
+    }
+
+    private string DisplayMetric()
+    {
+        switch (_metric)
+        {
+            case "high":
+                return "High Temp";
+            case "low":
+                return "Low Temp";
+            case "humidity":
+                return "Humidity";
+            case "wind":
+                return "Wind Speed";
+            case "pressure":
+                return "Air Pressure";
+            case "precipitation":
+                return "Precipitation";
+        }
+        return "";
+    }
+    
+    private string DisplayUnit()
+    {
+        switch (_metric)
+        {
+            case "high":
+                return (_measure == "metric") ? $" °C" : $" °F";
+            case "low":
+                return (_measure == "metric") ? $" °C" : $" °F";
+            case "humidity":
+                return $" %";
+            case "wind":
+                return (_measure == "metric") ? $" kph" : $" mph";
+            case "pressure":
+                return (_measure == "metric") ? $" hPa" : $" in";
+            case "precipitation":
+                return (_measure == "metric") ? $" mm" : $" in";
+        }
+        return "";
+    }
+}

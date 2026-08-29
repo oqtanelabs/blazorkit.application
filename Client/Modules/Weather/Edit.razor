@@ -1,0 +1,184 @@
+@using System.Threading.Tasks
+@using BlazorKit.Application.Models
+@using BlazorKit.Application.Services
+@using Oqtane.Modules.Controls
+
+@namespace BlazorKit.Application.Weather
+@inherits ModuleBase
+@inject IWeatherService WeatherService
+@inject NavigationManager NavigationManager
+
+<button type="button" class="btn btn-primary" @onclick="Add">Add</button>
+<br /><br />
+
+<Pager Items="@_weatherData" PageSize="5" CurrentPage="@_currentpage.ToString()" OnPageChange="OnPageChange">
+    <Header>
+        <th style="width: 1px;">&nbsp;</th>
+        <th style="width: 1px;">&nbsp;</th>
+        <th>City</th>
+        <th>Date</th>
+        <th>High</th>
+        <th>Low</th>
+        <th>Humidity</th>
+        <th>Wind</th>
+        <th>Pressure</th>
+        <th>Precipitation</th>
+    </Header>
+    <Row>
+        @if (context.WeatherDataId == _weatherDataId)
+        {
+            <td><button type="button" class="btn btn-success" @onclick="Save">Save</button></td>
+            <td><button type="button" class="btn btn-secondary" @onclick="Cancel">Cancel</button></td>
+            @if (_weatherDataId == 0)
+            {
+                <td><input id="city" class="form-control" @bind="@_city" /></td>
+                <td><input type="date" id="date" class="form-control" @bind="@_date" /></td>
+            }
+            else
+            {
+                <td>@context.City</td>
+                <td>@context.Date.ToShortDateString()</td>                
+            }
+            <td><input type="number" id="high" class="form-control" @bind="@_high" /></td>
+            <td><input type="number" id="low" class="form-control" @bind="@_low" /></td>
+            <td><input type="number" id="humidity" class="form-control" @bind="@_humidity" /></td>
+            <td><input type="number" id="wind" class="form-control" @bind="@_wind" /></td>
+            <td><input type="number" id="pressure" class="form-control" @bind="@_pressure" /></td>
+            <td><input type="number" id="precipitation" class="form-control" @bind="@_precipitation" /></td>
+        }
+        else
+        {
+            <td><button type="button" class="btn btn-primary" @onclick="@(() => Select(context))">Edit</button></td>
+            <td><button type="button" class="btn btn-danger" @onclick="@(() => Delete(context))">Delete</button></td>
+            <td>@context.City</td>
+            <td>@context.Date.ToShortDateString()</td>
+            <td>@context.HighTemperature</td>
+            <td>@context.LowTemperature</td>
+            <td>@context.Humidity</td>
+            <td>@context.WindSpeed</td>
+            <td>@context.AirPressure</td>
+            <td>@context.Precipitation</td>
+        }
+    </Row>
+</Pager>
+
+@code {
+    public override SecurityAccessLevel SecurityAccessLevel => SecurityAccessLevel.Edit;
+
+    private List<WeatherData> _weatherData;
+    private int _weatherDataId = -1;
+    private string _city;
+    private DateTime _date;
+    private string _high;
+    private string _low;
+    private string _humidity;
+    private string _wind;
+    private string _pressure;
+    private string _precipitation;
+    private int _currentpage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await Load();
+        }
+        catch (Exception ex)
+        {
+            await logger.LogError(ex, "Error Loading Weather Forecasts {Error}", ex.Message);
+            AddModuleMessage("Error Loading Weather Forecasts", MessageType.Error);
+        }
+    }
+
+    private async Task Load()
+    {
+        _weatherData = await WeatherService.GetAllWeatherDataAsync(PageState.Site.SiteId, DateTime.MinValue, DateTime.MaxValue, "");
+    }
+
+    private void Add()
+    {
+        _currentpage = 1;
+        if (!_weatherData.Any(item => item.SiteId == PageState.Site.SiteId && item.WeatherDataId == 0))
+        {
+            _weatherData.Insert(0, new WeatherData { SiteId = PageState.Site.SiteId, WeatherDataId = 0, City = "", Date = DateTime.Now.Date, HighTemperature = 0, LowTemperature = 0, Humidity = 0, WindSpeed = 0, AirPressure = 0, Precipitation = 0 });
+            _weatherDataId = 0;
+            _city = "";
+            _date = DateTime.Now.Date;
+            _high = "0.00";
+            _low = "0.00";
+            _humidity = "0.00";
+            _wind = "0.00";
+            _pressure = "0.00";
+            _precipitation = "0.00";
+            StateHasChanged();
+        }
+    }
+
+    private void Select(WeatherData forecast)
+    {
+        _weatherDataId = forecast.WeatherDataId;
+        _date = forecast.Date;
+        _city = forecast.City;
+        _high = forecast.HighTemperature.ToString();
+        _low = forecast.LowTemperature.ToString();
+        _humidity = forecast.Humidity.ToString();
+        _wind = forecast.WindSpeed.ToString();
+        _pressure = forecast.AirPressure.ToString();
+        _precipitation = forecast.Precipitation.ToString();
+        StateHasChanged();
+    }
+
+    private async Task Delete(WeatherData weatherData)
+    {
+        await WeatherService.DeleteWeatherDataAsync(weatherData.WeatherDataId);
+        _weatherDataId = -1;
+        await Load();
+        StateHasChanged();
+    }
+
+    private async Task Save()
+    {
+        if (!string.IsNullOrEmpty(_city))
+        {
+            if (_weatherDataId != 0)
+            {
+                var weatherData = _weatherData.First(item => item.WeatherDataId == _weatherDataId);
+                weatherData.HighTemperature = decimal.Parse(_high);
+                weatherData.LowTemperature = decimal.Parse(_low);
+                weatherData.Humidity = decimal.Parse(_humidity);
+                weatherData.WindSpeed = decimal.Parse(_wind);
+                weatherData.AirPressure = decimal.Parse(_pressure);
+                weatherData.Precipitation = decimal.Parse(_precipitation);
+                await WeatherService.UpdateWeatherDataAsync(weatherData);
+            }
+            else
+            {
+                if (!_weatherData.Any(item => item.SiteId == PageState.Site.SiteId && item.City == _city && item.Date.Date == _date.Date))
+                {
+                    var weatherData = new WeatherData { SiteId = PageState.Site.SiteId, City = _city, Date = _date, HighTemperature = int.Parse(_high), LowTemperature = int.Parse(_low), Humidity = int.Parse(_humidity), WindSpeed = int.Parse(_wind), AirPressure = decimal.Parse(_pressure), Precipitation = decimal.Parse(_precipitation) };
+                    await WeatherService.AddWeatherDataAsync(weatherData);
+                }
+                else
+                {
+                    AddModuleMessage("Weather Data Already Exists For Date And City", MessageType.Warning);
+                }
+            }
+        }
+        _weatherDataId = -1;
+        await Load();
+        StateHasChanged();
+    }
+
+    private async Task Cancel()
+    {
+        _weatherDataId = -1;
+        await Load();
+        StateHasChanged();
+    }
+
+
+    private void OnPageChange(int page)
+    {
+        _currentpage = page;
+    }
+}

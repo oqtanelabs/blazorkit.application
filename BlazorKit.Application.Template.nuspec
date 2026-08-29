@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+  <metadata>
+    <id>BlazorKit.Application.Template</id>
+    <version>10.2.4</version>
+    <title>BlazorKit Application Template</title>
+    <authors>Oqtane Labs Inc</authors>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <license type="expression">MIT</license>
+    <licenseUrl>https://licenses.nuget.org/MIT</licenseUrl>
+    <icon>icon.png</icon>
+    <projectUrl>https://www.oqtane.com/products/blazorkit</projectUrl>
+    <description>BlazorKit is an open source CMS and Application Framework that provides advanced functionality for developing web, mobile, and desktop applications on .NET. It supports Static Blazor, Blazor Server, Blazor WebAssembly, or Blazor Hybrid (via .NET MAUI).</description>
+    <language>en-US</language>
+    <tags>Web ASP.NET Blazor Oqtane Modular Multi-Tenant "Open Source" "SQL Server" MySQL PostgreSQL SQLite</tags>
+    <readme>README.md</readme>
+    <packageTypes>
+      <packageType name="Template" />
+    </packageTypes>
+  </metadata>
+</package>

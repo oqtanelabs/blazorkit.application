@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="Server\BlazorKit.Application.Server.csproj" DefaultStartup="true" />
+  <Project Path="Client\BlazorKit.Application.Client.csproj" />
+  <Project Path="Shared\BlazorKit.Application.Shared.csproj" />
+</Solution>
