@@ -1,5 +1,4 @@
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Oqtane.Infrastructure;
 using Oqtane.Models;
 using Oqtane.Repository;
@@ -46,22 +45,30 @@ namespace BlazorKit.Application.Jobs
                 var tenantId = _TenantManager.GetTenant().TenantId;
                 _TenantManager.SetAlias(tenantId, site.SiteId);
 
-                // a real implementation would use an external service to get latest weather information
+                // get existing weather data
+                var weatherData = _WeatherDataRepository.GetAllWeatherData(site.SiteId, DateTime.MinValue, DateTime.MaxValue, "");
+
+                // ** note that a real implementation would use an external service to get latest weather information
+
+                // create random weather data for each city for each day since the last date
                 foreach (var city in _WeatherDataRepository.GetWeatherCities(site.SiteId))
                 {
-                    var data = new WeatherData();
-                    data.City = city;
-                    data.Date = DateTime.UtcNow.Date;
-                    data.HighTemperature = new Random().Next(70, 100);
-                    data.LowTemperature = new Random().Next(50, 80);
-                    data.Humidity = new Random().Next(30, 80);
-                    data.WindSpeed = new Random().Next(0, 20);
-                    data.AirPressure = new Random().Next(28, 32);
-                    data.Precipitation = new Random().Next(0, 2);
-                    _WeatherDataRepository.AddWeatherData(data);
-                }
+                    for (DateTime date = weatherData.Max(item => item.Date).AddDays(1).Date; date <= DateTime.UtcNow.Date; date = date.AddDays(1))
+                    {
+                        var data = new WeatherData();
+                        data.City = city;
+                        data.Date = date;
+                        data.HighTemperature = new Random().Next(70, 100);
+                        data.LowTemperature = new Random().Next(50, 80);
+                        data.Humidity = new Random().Next(30, 80);
+                        data.WindSpeed = new Random().Next(0, 20);
+                        data.AirPressure = new Random().Next(28, 32);
+                        data.Precipitation = new Random().Next(0, 2);
+                        _WeatherDataRepository.AddWeatherData(data);
 
-                log += $"Weather Data Retrieved For {DateTime.Now.ToShortDateString()}<br />";
+                        log += $"Created Weather Data For {city} And Date {date.ToShortDateString()}<br />";
+                    }
+                }
             }
 
             return log;
