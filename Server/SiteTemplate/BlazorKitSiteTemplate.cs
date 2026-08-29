@@ -94,9 +94,9 @@ namespace BlazorKit.Application.SiteTemplate
 			{
 				Name = "About",
 				Parent = "",
-				Path = "/about",
+				Path = "about",
 				Order = 3,
-				Icon = "oi oi-home",
+				Icon = "oi oi-info",
 				IsNavigation = true,
 				IsPersonalizable = false,
 				PermissionList = new List<Permission>

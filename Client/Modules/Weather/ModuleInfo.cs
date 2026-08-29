@@ -1,7 +1,7 @@
 using Oqtane.Models;
 using Oqtane.Modules;
 
-namespace BlazorKit.Application.Client.Modules.Weather
+namespace BlazorKit.Application.Weather
 {
     public class ModuleInfo : IModule
     {

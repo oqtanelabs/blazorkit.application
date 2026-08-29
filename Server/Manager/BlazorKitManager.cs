@@ -39,7 +39,7 @@ namespace BlazorKit.Application.Manager
         {
             var searchContentList = new List<SearchContent>();
 
-            foreach (var city in _WeatherDataRepository.GetWeatherCities(0))
+            foreach (var city in _WeatherDataRepository.GetWeatherCities(pageModule.Module.SiteId))
             {
                 searchContentList.Add(new SearchContent
                 {
@@ -47,7 +47,7 @@ namespace BlazorKit.Application.Manager
                     EntityId = city,
                     Title = city,
                     Description = "",
-                    Body = $"{city} Weather",
+                    Body = $"Weather Information Include Temperature, Humidity, Wind, and Precipitation",
                     Url = $"/?city={WebUtility.UrlEncode(city)}",
                     ContentModifiedBy = "host",
                     ContentModifiedOn = lastIndexedOn
