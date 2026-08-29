@@ -1,5 +1,6 @@
 @using BlazorKit.Application.Services
 @using BlazorKit.Application.Models
+@using System.Net
 
 @namespace BlazorKit.Application.Weather
 @inherits ModuleBase
@@ -327,11 +328,11 @@ else
 
         if (_city == "" && PageState.QueryString.ContainsKey("city"))
         {
-            _city = PageState.QueryString["city"];
+            _city = WebUtility.UrlDecode(PageState.QueryString["city"]);
         }
         _weatherData = await WeatherService.GetAllWeatherDataAsync(PageState.Site.SiteId, _from, _to, _city);
 
-        if (_from == DateTime.MinValue)
+        if (_from == DateTime.MinValue && _weatherData.Any())
         {
             _from = _weatherData.Min(w => w.Date);
             _to = _weatherData.Max(w => w.Date);
