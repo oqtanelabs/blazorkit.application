@@ -56,6 +56,7 @@ namespace BlazorKit.Application.Jobs
                     for (DateTime date = weatherData.Max(item => item.Date).AddDays(1).Date; date <= DateTime.UtcNow.Date; date = date.AddDays(1))
                     {
                         var data = new WeatherData();
+                        data.SiteId = site.SiteId;
                         data.City = city;
                         data.Date = date;
                         data.HighTemperature = new Random().Next(70, 100);
