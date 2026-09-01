@@ -59,12 +59,12 @@ namespace BlazorKit.Application.Jobs
                         data.SiteId = site.SiteId;
                         data.City = city;
                         data.Date = date;
-                        data.HighTemperature = new Random().Next(70, 100);
-                        data.LowTemperature = new Random().Next(50, 80);
+                        data.HighTemperature = new Random().Next(60, 100);
+                        data.LowTemperature = new Random().Next(40, 80);
                         data.Humidity = new Random().Next(30, 80);
                         data.WindSpeed = new Random().Next(0, 20);
-                        data.AirPressure = new Random().Next(28, 32);
-                        data.Precipitation = new Random().Next(0, 2);
+                        data.AirPressure = new Random().Next(26, 32);
+                        data.Precipitation = new Random().Next(0, 20) / 10.0m;
                         _WeatherDataRepository.AddWeatherData(data);
 
                         log += $"Created Weather Data For {city} And Date {date.ToShortDateString()}<br />";
