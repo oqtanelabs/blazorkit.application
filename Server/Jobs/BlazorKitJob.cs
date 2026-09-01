@@ -50,21 +50,35 @@ namespace BlazorKit.Application.Jobs
 
                 // ** note that a real implementation would use an external service to get latest weather information
 
-                // create random weather data for each city for each day since the last date
+                // create synthetic weather data for each city
                 foreach (var city in _WeatherDataRepository.GetWeatherCities(site.SiteId))
                 {
-                    for (DateTime date = weatherData.Max(item => item.Date).AddDays(1).Date; date <= DateTime.UtcNow.Date; date = date.AddDays(1))
+                    var cityWeather = weatherData.Where(item => item.City == city).ToList();
+                    var minHighTemperature = cityWeather.Min(item => item.HighTemperature);
+                    var maxHighTemperature = cityWeather.Max(item => item.HighTemperature);
+                    var minLowTemperature = cityWeather.Min(item => item.LowTemperature);
+                    var maxLowTemperature = cityWeather.Max(item => item.LowTemperature);
+                    var minHumidity = cityWeather.Min(item => item.Humidity);
+                    var maxHumidity = cityWeather.Max(item => item.Humidity);
+                    var minWindSpeed = cityWeather.Min(item => item.WindSpeed);
+                    var maxWindSpeed = cityWeather.Max(item => item.WindSpeed);
+                    var minAirPressure = cityWeather.Min(item => item.AirPressure);
+                    var maxAirPressure = cityWeather.Max(item => item.AirPressure);
+                    var minPrecipitation = cityWeather.Min(item => item.Precipitation);
+                    var maxPrecipitation = cityWeather.Max(item => item.Precipitation);
+
+                    for (DateTime date = cityWeather.Max(item => item.Date).AddDays(1).Date; date <= DateTime.UtcNow.Date; date = date.AddDays(1))
                     {
                         var data = new WeatherData();
                         data.SiteId = site.SiteId;
                         data.City = city;
                         data.Date = date;
-                        data.HighTemperature = new Random().Next(60, 100);
-                        data.LowTemperature = new Random().Next(40, 80);
-                        data.Humidity = new Random().Next(30, 80);
-                        data.WindSpeed = new Random().Next(0, 20);
-                        data.AirPressure = new Random().Next(26, 32);
-                        data.Precipitation = new Random().Next(0, 20) / 10.0m;
+                        data.HighTemperature = new Random().Next((int)minHighTemperature, (int)maxHighTemperature);
+                        data.LowTemperature = new Random().Next((int)minLowTemperature, (int)maxLowTemperature);
+                        data.Humidity = new Random().Next((int)minHumidity, (int)maxHumidity);
+                        data.WindSpeed = new Random().Next((int)minWindSpeed, (int)maxWindSpeed);
+                        data.AirPressure = new Random().Next((int)(minAirPressure * 100), (int)(maxAirPressure * 100)) / 100.0m;
+                        data.Precipitation = new Random().Next((int)(minPrecipitation * 100), (int)(maxPrecipitation * 100)) / 100.0m;
                         _WeatherDataRepository.AddWeatherData(data);
 
                         log += $"Created Weather Data For {city} And Date {date.ToShortDateString()}<br />";
