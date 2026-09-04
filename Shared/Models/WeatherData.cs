@@ -1,7 +1,5 @@
 using Oqtane.Models;
 using System;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BlazorKit.Application.Models
 {

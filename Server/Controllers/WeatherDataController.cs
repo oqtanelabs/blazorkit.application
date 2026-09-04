@@ -10,9 +10,7 @@ using Oqtane.Models;
 using Oqtane.Shared;
 using System.Collections.Generic;
 using System.Net;
-using System.Threading.Tasks;
 using BlazorKit.Application.Models;
-using System.Net.Http;
 using System;
 
 namespace BlazorKit.Application.Controllers

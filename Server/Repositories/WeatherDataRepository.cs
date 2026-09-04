@@ -18,9 +18,9 @@ namespace BlazorKit.Application.Repository
 
     public class WeatherDataRepository : IWeatherDataRepository, ITransientService
     {
-        private readonly IDbContextFactory<BlazorKitContext> _factory;
+        private readonly IDbContextFactory<DatabaseContext> _factory;
 
-        public WeatherDataRepository(IDbContextFactory<BlazorKitContext> factory)
+        public WeatherDataRepository(IDbContextFactory<DatabaseContext> factory)
         {
             _factory = factory;
         }

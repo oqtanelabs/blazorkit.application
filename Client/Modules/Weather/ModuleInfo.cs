@@ -10,7 +10,7 @@ namespace BlazorKit.Application.Weather
             Name = "Weather",
             Description = "Weather",
             Version = "1.0.0",
-			ServerManagerType = "BlazorKit.Application.Manager.BlazorKitManager, BlazorKit.Application.Server.Oqtane",
+			ServerManagerType = "BlazorKit.Application.Manager.ServerManager, BlazorKit.Application.Server.Oqtane",
 			Dependencies = "BlazorKit.Application.Shared.Oqtane",
             PackageName = "BlazorKit.Application" 
         };

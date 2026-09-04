@@ -1,13 +1,11 @@
 ﻿using BlazorKit.Application.Models;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.DependencyInjection;
 using Oqtane.Infrastructure;
 using Oqtane.Models;
 using Oqtane.Repository;
 using Oqtane.Shared;
 using System;
 using System.Collections.Generic;
-using System.Text.Json;
 using BlazorKit.Application.Repository;
 
 namespace BlazorKit.Application.SiteTemplate
@@ -80,7 +78,7 @@ namespace BlazorKit.Application.SiteTemplate
                 {
                     new PageTemplateModule
                     {
-                        ModuleDefinitionName = typeof(BlazorKit.Application.Weather.Index).ToModuleDefinitionName(), Title = "Weather Dashboard", Pane = PaneNames.Default,
+                        ModuleDefinitionName = typeof(Weather.Index).ToModuleDefinitionName(), Title = "Weather Dashboard", Pane = PaneNames.Default,
                         PermissionList = new List<Permission>
                         {
                             new Permission(PermissionNames.View, RoleNames.Admin, true),

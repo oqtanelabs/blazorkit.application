@@ -23,7 +23,7 @@ namespace BlazorKit.Application.Startup
         {
             services.AddTransient<IWeatherService, ServerWeatherService>();
 
-			services.AddDbContextFactory<BlazorKitContext>(opt => { }, ServiceLifetime.Transient);
+			services.AddDbContextFactory<DatabaseContext>(opt => { }, ServiceLifetime.Transient);
 		}
 	}
 }

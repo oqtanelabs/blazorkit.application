@@ -2,13 +2,12 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Oqtane.Databases.Interfaces;
 using Oqtane.Migrations;
-using Oqtane.Migrations.EntityBuilders;
 using BlazorKit.Application.Repository;
 using BlazorKit.Application.Migrations.EntityBuilders;
 
 namespace BlazorKit.Application.Migrations
 {
-    [DbContext(typeof(BlazorKitContext))]
+    [DbContext(typeof(DatabaseContext))]
     // make sure to update the version number in the ModuleInfo.cs file when adding a new migration or else it will not be executed
     [Migration("BlazorKit.Application.01.00.00.00")]
     public class Initialize : MultiDatabaseMigration

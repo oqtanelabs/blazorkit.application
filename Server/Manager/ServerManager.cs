@@ -1,5 +1,4 @@
 using BlazorKit.Application.Repository;
-using Microsoft.IdentityModel.Tokens;
 using Oqtane.Enums;
 using Oqtane.Infrastructure;
 using Oqtane.Interfaces;
@@ -8,18 +7,17 @@ using Oqtane.Modules;
 using Oqtane.Repository;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using System.Net;
 
 namespace BlazorKit.Application.Manager
 {
-    public class BlazorKitManager : MigratableModuleBase, IInstallable, ISearchable
+    public class ServerManager : MigratableModuleBase, IInstallable, ISearchable
     {
         private readonly IDBContextDependencies _DBContextDependencies;
         private readonly IWeatherDataRepository _WeatherDataRepository;
 
-        public BlazorKitManager(IDBContextDependencies DBContextDependencies, IWeatherDataRepository WeatherDataRepository)
+        public ServerManager(IDBContextDependencies DBContextDependencies, IWeatherDataRepository WeatherDataRepository)
         {
             _DBContextDependencies = DBContextDependencies;
             _WeatherDataRepository = WeatherDataRepository;
@@ -27,12 +25,12 @@ namespace BlazorKit.Application.Manager
 
         public bool Install(Tenant tenant, string version)
         {
-            return Migrate(new BlazorKitContext(_DBContextDependencies), tenant, MigrationType.Up);
+            return Migrate(new DatabaseContext(_DBContextDependencies), tenant, MigrationType.Up);
         }
 
         public bool Uninstall(Tenant tenant)
         {
-            return Migrate(new BlazorKitContext(_DBContextDependencies), tenant, MigrationType.Down);
+            return Migrate(new DatabaseContext(_DBContextDependencies), tenant, MigrationType.Down);
         }
 
         public Task<List<SearchContent>> GetSearchContentsAsync(PageModule pageModule, DateTime lastIndexedOn)
