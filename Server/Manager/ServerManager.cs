@@ -1,4 +1,5 @@
 using BlazorKit.Application.Repository;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using Oqtane.Enums;
 using Oqtane.Infrastructure;
 using Oqtane.Interfaces;
@@ -7,12 +8,12 @@ using Oqtane.Modules;
 using Oqtane.Repository;
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using System.Net;
+using System.Threading.Tasks;
 
 namespace BlazorKit.Application.Manager
 {
-    public class ServerManager : MigratableModuleBase, IInstallable, ISearchable
+    public class ServerManager : MigratableModuleBase, IInstallable, ISearchable, ISitemap
     {
         private readonly IDBContextDependencies _DBContextDependencies;
         private readonly IWeatherDataRepository _WeatherDataRepository;
@@ -55,5 +56,16 @@ namespace BlazorKit.Application.Manager
             return Task.FromResult(searchContentList);
         }
 
-    }
+		public List<Sitemap> GetUrls(string alias, string path, Module module)
+        {
+			var sitemap = new List<Sitemap>();
+
+			foreach (var city in _WeatherDataRepository.GetWeatherCities(module.SiteId))
+			{
+				sitemap.Add(new Sitemap { Url = $"/?city={WebUtility.UrlEncode(city)}", ModifiedOn = DateTime.UtcNow });
+			}
+
+            return sitemap;
+		}
+	}
 }
