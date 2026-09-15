@@ -182,7 +182,7 @@
             _mode = SettingService.GetSetting(PageState.Site.Settings, GetType().Namespace + ":Mode", "dark");
             if (PageState.User != null)
             {
-                _personalize = SettingService.GetSetting(PageState.User.Settings, GetType().Namespace + ":Personalize", "true");
+                _personalize = SettingService.GetSetting(PageState.Site.Settings, GetType().Namespace + ":Personalize", "true");
                 if (_personalize == "true")
                 {
                     _mode = SettingService.GetSetting(PageState.User.Settings, GetType().Namespace + ":Mode", "dark");
